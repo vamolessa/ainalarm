@@ -41,8 +41,8 @@ function on_alarm() {
 	alarm_audio.play();
 }
 
-function start_timer(seconds) {
-	const delay = seconds / 1000;
+function start_timer(millis) {
+	const delay = millis / 1000;
 	timer = delay;
 	update_timer_span();
 	clearTimeout(timer_timeout);
@@ -84,14 +84,14 @@ function on_start_from() {
 
 	if (target_seconds < now_seconds) {
 		const diff_seconds = (now_seconds - target_seconds) % timeout_seconds;
-		console.log(diff_seconds);
+		const diff_millis = diff_seconds * 1000;
 		alarm_timeout = setTimeout(function() {
 			on_alarm();
 			on_start_now();
-		}, diff_seconds * 1000);
-		start_timer(diff_seconds);
+		}, diff_millis);
+		start_timer(diff_millis);
 	} else {
-		alert("ainda não aconteceu!");
+		alert("já passou!");
 	}
 }
 
