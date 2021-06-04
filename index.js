@@ -55,13 +55,15 @@ function start_timer(millis) {
 	}, 1000);
 }
 
-function on_start_now() {
-	update_time_inputs();
-
+function set_alarm_timer() {
 	clearTimeout(alarm_timeout);
 	alarm_timeout = setInterval(on_alarm, ALARM_TIMEOUT);
-
 	start_timer(ALARM_TIMEOUT);
+}
+
+function on_start_now() {
+	update_time_inputs();
+	set_alarm_timer();
 }
 
 function on_start_from() {
@@ -70,26 +72,26 @@ function on_start_from() {
 	const now = new Date();
 	const now_seconds = (now.getHours() * 60 + now.getMinutes()) * 60 + now.getSeconds();
 
-	const target_hours = parseInt(hours_input.value);
-	if (target_hours == NaN) {
+	const base_hours = parseInt(hours_input.value);
+	if (base_hours == NaN) {
 		alert(`${hours_input.value} não é uma hora válida`);
 		return;
 	}
-	const target_minutes = parseInt(minutes_input.value);
-	if (target_minutes == NaN) {
+	const base_minutes = parseInt(minutes_input.value);
+	if (base_minutes == NaN) {
 		alert(`${minutes_input.value} não é um minuto válido`);
 		return;
 	}
-	const target_seconds = (target_hours * 60 + target_minutes) * 60;
+	const base_seconds = (base_hours * 60 + base_minutes) * 60;
 
-	if (target_seconds < now_seconds) {
-		const diff_seconds = (now_seconds - target_seconds) % timeout_seconds;
-		const diff_millis = diff_seconds * 1000;
+	if (base_seconds < now_seconds) {
+		const left_seconds = timeout_seconds - (now_seconds - base_seconds) % timeout_seconds;
+		const delay = left_seconds * 1000;
 		alarm_timeout = setTimeout(function() {
 			on_alarm();
-			on_start_now();
-		}, diff_millis);
-		start_timer(diff_millis);
+			set_alarm_timer();
+		}, delay);
+		start_timer(delay);
 	} else {
 		alert("já passou!");
 	}
