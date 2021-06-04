@@ -1,6 +1,5 @@
-//const ALERT_TIMEOUT = 10 * 1000;
-const ALERT_TIMEOUT = 7 * 60 * 1000;
-const TIMER_TIMEOUT = 1000;
+//const ALARM_TIMEOUT = 10 * 1000;
+const ALARM_TIMEOUT = 7 * 60 * 1000;
 const BLINK_TIMEOUT = 500;
 
 const original_title = document.title;
@@ -26,41 +25,74 @@ function update_timer_span() {
 }
 
 function update_time_inputs() {
-	const time = new Date();
-	hours_input.value = time.getHours();
-	minutes_input.value = time.getMinutes();
+	const now = new Date();
+	hours_input.value = now.getHours();
+	minutes_input.value = now.getMinutes();
+}
+
+function on_alarm() {
+	clearTimeout(blink_timeout);
+	document.title = alert_title;
+	blink_timeout = setInterval(function () {
+		document.title = blink_on ? alert_title : original_title;
+		blink_on = !blink_on;
+	}, BLINK_TIMEOUT);
+
+	alarm_audio.play();
+}
+
+function start_timer(seconds) {
+	const delay = seconds / 1000;
+	timer = delay;
+	update_timer_span();
+	clearTimeout(timer_timeout);
+	timer_timeout = setInterval(function() {
+		timer -= 1;
+		if (timer <= 0) {
+			timer = delay;
+		}
+		update_timer_span();
+	}, 1000);
 }
 
 function on_start_now() {
 	update_time_inputs();
 
 	clearTimeout(alarm_timeout);
-	alarm_timeout = setInterval(function() {
-		clearTimeout(blink_timeout);
-		document.title = alert_title;
-		blink_timeout = setInterval(function () {
-			document.title = blink_on ? alert_title : original_title;
-			blink_on = !blink_on;
-		}, BLINK_TIMEOUT);
+	alarm_timeout = setInterval(on_alarm, ALARM_TIMEOUT);
 
-		alarm_audio.play();
-	}, ALERT_TIMEOUT);
-	
-	timer = ALERT_TIMEOUT / TIMER_TIMEOUT;
-	update_timer_span();
-	clearTimeout(timer_timeout);
-	timer_timeout = setInterval(function() {
-		timer -= 1;
-		if (timer <= 0) {
-			timer = ALERT_TIMEOUT / TIMER_TIMEOUT;
-		}
-		update_timer_span();
-	}, TIMER_TIMEOUT);
+	start_timer(ALARM_TIMEOUT);
 }
 
 function on_start_from() {
-	const delay = 0.0;
-	alarm_timeout = setTimeout(on_start_now, delay);
+	const timeout_seconds = ALARM_TIMEOUT / 1000;
+
+	const now = new Date();
+	const now_seconds = (now.getHours() * 60 + now.getMinutes()) * 60 + now.getSeconds();
+
+	const target_hours = parseInt(hours_input.value);
+	if (target_hours == NaN) {
+		alert(`${hours_input.value} não é uma hora válida`);
+		return;
+	}
+	const target_minutes = parseInt(minutes_input.value);
+	if (target_minutes == NaN) {
+		alert(`${minutes_input.value} não é um minuto válido`);
+		return;
+	}
+	const target_seconds = (target_hours * 60 + target_minutes) * 60;
+
+	if (target_seconds < now_seconds) {
+		const diff_seconds = (now_seconds - target_seconds) % timeout_seconds;
+		console.log(diff_seconds);
+		alarm_timeout = setTimeout(function() {
+			on_alarm();
+			on_start_now();
+		}, diff_seconds * 1000);
+		start_timer(diff_seconds);
+	} else {
+		alert("ainda não aconteceu!");
+	}
 }
 
 window.onfocus = function() {
