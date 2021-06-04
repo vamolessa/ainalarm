@@ -4,70 +4,23 @@
 	<meta charset="utf-8">
 	<title>Ainalarm</title>
 	<link rel="stylesheet" href="styles.css">
+	<script src="index.js"></script>
 </head>
 <body>
 	<img src="rainbow_cry.gif" />
-	<button class="start" onclick=on_start();>Agora!</button>
-	<span class="timer"></span>
-	<span class="version">versão 1.2</span>
-
-	<script>
-		//const ALERT_TIMEOUT = 10 * 1000;
-		const ALERT_TIMEOUT = 7 * 60 * 1000;
-		const TIMER_TIMEOUT = 1000;
-		const BLINK_TIMEOUT = 500;
-
-		const original_title = document.title;
-		const alert_title = document.title + " (TA NA HORA!)";
-		const alarm_audio = new Audio("alarm.mp3");
-		const timer_span = document.querySelector("span.timer");
-
-		let alarm_timeout = null;
-		let timer_timeout = null;
-		let blink_timeout = null;
-
-		let timer = 0;
-		let blink_on = false;
+	<button class="start" onclick=on_start_now();>Agora!</button>
+	<div class="manual">
+		<button class="" onclick=on_start_from();>a partir de</button>
 		
-		function update_timer_span() {
-			const minutes = Math.floor(timer / 60);
-			const seconds = timer % 60;
-			const seconds_prefix = seconds < 10 ? "0" : "";
-			timer_span.textContent = `${minutes}:${seconds_prefix}${seconds}`;
-		}
+		<label for="hours">
+			<input id="hours" type="number" min="0" max="23" value="0" title="horas"/>h
+		</label>
+		<label for="minutes">
+			<input id="minutes" type="number" min="0" max="59" value="0" title="minutos"/>m
+		</label>
 
-		function on_start() {
-			clearTimeout(alarm_timeout);
-			alarm_timeout = setInterval(function() {
-				clearTimeout(blink_timeout);
-				document.title = alert_title;
-				blink_timeout = setInterval(function () {
-					document.title = blink_on ? alert_title : original_title;
-					blink_on = !blink_on;
-				}, BLINK_TIMEOUT);
-
-				alarm_audio.play();
-			}, ALERT_TIMEOUT);
-			
-			timer = ALERT_TIMEOUT / TIMER_TIMEOUT;
-			update_timer_span();
-			clearTimeout(timer_timeout);
-			timer_timeout = setInterval(function() {
-				timer -= 1;
-				if (timer <= 0) {
-					timer = ALERT_TIMEOUT / TIMER_TIMEOUT;
-				}
-				update_timer_span();
-			}, TIMER_TIMEOUT);
-		}
-
-		window.onfocus = function() {
-			clearTimeout(blink_timeout);
-			document.title = original_title;
-
-			alarm_audio.pause();
-			alarm_audio.fastSeek(0);
-		}
-	</script>
+	</div>
+	<span id="timer"></span>
+	<span class="version">versão 1.3</span>
 </body>
 </html>

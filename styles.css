@@ -23,13 +23,13 @@ body {
 	font-family: sans-serif;
 }
 
-button {
+button.start {
 	width: 130px;
 	height: 60px;
 	font-size: 30px;
 }
 
-span.timer {
+span#timer {
 	font-size: 14px;
 }
 
@@ -41,3 +41,20 @@ span.version {
 	font-size: 10px;
 }
 
+div.manual {
+	display: flex;
+	flex-direction: row;
+
+	justify-content: center;
+	align-content: center;
+	align-items: center;
+}
+
+div.manual input {
+	width: 32px;
+}
+
+div.manual button {
+	font-size: 14px;
+	margin-right: 10px;
+}
