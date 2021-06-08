@@ -8,6 +8,7 @@ const alarm_audio = new Audio("alarm.mp3");
 
 let hours_input = null;
 let minutes_input = null;
+let seconds_input = null;
 let timer_span = null;
 
 let alarm_timeout = null;
@@ -28,11 +29,12 @@ function update_time_inputs() {
 	const now = new Date();
 	hours_input.value = now.getHours();
 	minutes_input.value = now.getMinutes();
+	seconds_input.value = now.getSeconds();
 }
 
 function on_alarm() {
-	clearTimeout(blink_timeout);
 	document.title = alert_title;
+	clearTimeout(blink_timeout);
 	blink_timeout = setInterval(function () {
 		document.title = blink_on ? alert_title : original_title;
 		blink_on = !blink_on;
@@ -48,8 +50,9 @@ function start_timer(millis) {
 	clearTimeout(timer_timeout);
 	timer_timeout = setInterval(function() {
 		timer -= 1;
-		if (timer <= 0) {
-			timer = delay;
+		if (timer < 0) {
+			timer = 0;
+			clearTimeout(timer_timeout);
 		}
 		update_timer_span();
 	}, 1000);
@@ -82,10 +85,15 @@ function on_start_from() {
 		alert(`${minutes_input.value} não é um minuto válido`);
 		return;
 	}
-	const base_seconds = (base_hours * 60 + base_minutes) * 60;
+	const base_seconds = parseInt(seconds_input.value);
+	if (base_seconds == NaN) {
+		alert(`${seconds_input.value} não é um minuto válido`);
+		return;
+	}
+	const base_total_seconds = (base_hours * 60 + base_minutes) * 60 + base_seconds;
 
-	if (base_seconds < now_seconds) {
-		const left_seconds = timeout_seconds - (now_seconds - base_seconds) % timeout_seconds;
+	if (base_total_seconds < now_seconds) {
+		const left_seconds = timeout_seconds - (now_seconds - base_total_seconds) % timeout_seconds;
 		const delay = left_seconds * 1000;
 		alarm_timeout = setTimeout(function() {
 			on_alarm();
@@ -93,7 +101,7 @@ function on_start_from() {
 		}, delay);
 		start_timer(delay);
 	} else {
-		alert("já passou!");
+		alert("tempo tá no futuro");
 	}
 }
 
@@ -108,6 +116,7 @@ window.onfocus = function() {
 window.onload = function() {
 	hours_input = document.getElementById("hours");
 	minutes_input = document.getElementById("minutes");
+	seconds_input = document.getElementById("seconds");
 	timer_span = document.getElementById("timer");
 
 	update_time_inputs();
