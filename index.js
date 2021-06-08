@@ -41,6 +41,7 @@ function on_alarm() {
 	}, BLINK_TIMEOUT);
 
 	alarm_audio.play();
+	start_timer(ALARM_TIMEOUT);
 }
 
 function start_timer(millis) {
