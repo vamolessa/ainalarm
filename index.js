@@ -2,6 +2,11 @@
 const ALARM_TIMEOUT = 7 * 60 * 1000;
 const BLINK_TIMEOUT = 500;
 
+const WORKER = new Worker("/worker.js");
+WORKER.onmessage = function(e) {
+	console.log("ON WORKER RESPONSE");
+}
+
 const original_title = document.title;
 const alert_title = document.title + " (TA NA HORA!)";
 const alarm_audio = new Audio("alarm.mp3");
@@ -60,6 +65,8 @@ function start_timer(millis) {
 }
 
 function set_alarm_timer() {
+	WORKER.postMessage(10 * 1000);
+	
 	clearTimeout(alarm_timeout);
 	alarm_timeout = setInterval(on_alarm, ALARM_TIMEOUT);
 	start_timer(ALARM_TIMEOUT);
