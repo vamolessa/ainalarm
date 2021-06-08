@@ -23,12 +23,6 @@ body {
 	font-family: sans-serif;
 }
 
-button.start {
-	width: 130px;
-	height: 60px;
-	font-size: 30px;
-}
-
 span#timer {
 	font-size: 14px;
 }

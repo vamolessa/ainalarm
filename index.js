@@ -2,88 +2,35 @@
 const ALARM_TIMEOUT = 7 * 60 * 1000;
 const BLINK_TIMEOUT = 500;
 
-const WORKER = window.location.protocol == "file:" ?
-	 new Worker("./worker.js") :
-	 new Worker(window.location.href + "worker.js");
-WORKER.onmessage = function(e) {
-	console.log("ON WORKER RESPONSE");
-}
-function start_worker_timer(duration) {
-	const timestamp = window.performance.now();
-	WORKER.postMessage({timestamp: timestamp, duration: duration})
-}
-
 const original_title = document.title;
-const alert_title = document.title + " (TA NA HORA!)";
+const alert_title = original_title + " (TA NA HORA!)";
 const alarm_audio = new Audio("alarm.mp3");
 
 let hours_input = null;
 let minutes_input = null;
 let seconds_input = null;
-let timer_span = null;
+let timer_label = null;
 
 let alarm_timeout = null;
-let timer_timeout = null;
-let blink_timeout = null;
-
-let timer = 0;
-let blink_on = false;
-
-function update_timer_span() {
-	const minutes = Math.floor(timer / 60);
-	const seconds = timer % 60;
-	const seconds_prefix = seconds < 10 ? "0" : "";
-	timer_span.textContent = `${minutes}:${seconds_prefix}${seconds}`;
-}
-
-function update_time_inputs() {
-	const now = new Date();
-	hours_input.value = now.getHours();
-	minutes_input.value = now.getMinutes();
-	seconds_input.value = now.getSeconds();
-}
+let blink_on_alarm_timeout = null;
 
 function on_alarm() {
+	clearTimeout(blink_on_alarm_timeout);
+
 	document.title = alert_title;
-	clearTimeout(blink_timeout);
-	blink_timeout = setInterval(function () {
+	let blink_on = false;
+
+	blink_on_alarm_timeout = setInterval(function () {
 		document.title = blink_on ? alert_title : original_title;
 		blink_on = !blink_on;
 	}, BLINK_TIMEOUT);
 
 	alarm_audio.play();
-	start_timer(ALARM_TIMEOUT);
 }
 
-function start_timer(millis) {
-	const delay = millis / 1000;
-	timer = delay;
-	update_timer_span();
-	clearTimeout(timer_timeout);
-	timer_timeout = setInterval(function() {
-		timer -= 1;
-		if (timer < 0) {
-			timer = 0;
-			clearTimeout(timer_timeout);
-		}
-		update_timer_span();
-	}, 1000);
-}
-
-function set_alarm_timer() {
-	start_worker_timer(10 * 1000);
-	
+function start_timer() {
 	clearTimeout(alarm_timeout);
-	alarm_timeout = setInterval(on_alarm, ALARM_TIMEOUT);
-	start_timer(ALARM_TIMEOUT);
-}
 
-function on_start_now() {
-	update_time_inputs();
-	set_alarm_timer();
-}
-
-function on_start_from() {
 	const timeout_seconds = ALARM_TIMEOUT / 1000;
 
 	const now = new Date();
@@ -106,21 +53,36 @@ function on_start_from() {
 	}
 	const base_total_seconds = (base_hours * 60 + base_minutes) * 60 + base_seconds;
 
-	if (base_total_seconds < now_seconds) {
-		const left_seconds = timeout_seconds - (now_seconds - base_total_seconds) % timeout_seconds;
-		const delay = left_seconds * 1000;
-		alarm_timeout = setTimeout(function() {
-			on_alarm();
-			set_alarm_timer();
-		}, delay);
-		start_timer(delay);
-	} else {
+	if (base_total_seconds > now_seconds) {
 		alert("tempo tá no futuro");
+		return;
 	}
+
+	const seconds_duration = timeout_seconds - (now_seconds - base_total_seconds) % timeout_seconds;
+	const timer_end_timestamp = window.performance.now() + seconds_duration * 1000;
+
+	const check_timer = function() {
+		let time_left = timer_end_timestamp - window.performance.now();
+		if (time_left < 0) {
+			time_left = 0;
+			on_alarm();
+			start_timer();
+		}
+
+		time_left = Math.ceil(time_left / 1000);
+
+		const minutes = Math.floor(time_left / 60);
+		const seconds = time_left % 60;
+		const seconds_prefix = seconds < 10 ? "0" : "";
+		timer_label.textContent = `${minutes}:${seconds_prefix}${seconds}`;
+	}
+
+	check_timer();
+	alarm_timeout = setInterval(check_timer, 1000);
 }
 
 window.onfocus = function() {
-	clearTimeout(blink_timeout);
+	clearTimeout(blink_on_alarm_timeout);
 	document.title = original_title;
 
 	alarm_audio.pause();
@@ -131,7 +93,10 @@ window.onload = function() {
 	hours_input = document.getElementById("hours");
 	minutes_input = document.getElementById("minutes");
 	seconds_input = document.getElementById("seconds");
-	timer_span = document.getElementById("timer");
+	timer_label = document.getElementById("timer");
 
-	update_time_inputs();
+	const now = new Date();
+	hours_input.value = now.getHours();
+	minutes_input.value = now.getMinutes();
+	seconds_input.value = now.getSeconds();
 };
