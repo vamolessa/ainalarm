@@ -2,7 +2,7 @@
 const ALARM_TIMEOUT = 7 * 60 * 1000;
 const BLINK_TIMEOUT = 500;
 
-const WORKER = new Worker("/worker.js");
+const WORKER = new Worker(window.location.href + "worker.js");
 WORKER.onmessage = function(e) {
 	console.log("ON WORKER RESPONSE");
 }
