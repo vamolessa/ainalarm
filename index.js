@@ -2,9 +2,15 @@
 const ALARM_TIMEOUT = 7 * 60 * 1000;
 const BLINK_TIMEOUT = 500;
 
-const WORKER = new Worker(window.location.href + "worker.js");
+const WORKER = window.location.protocol == "file:" ?
+	 new Worker("./worker.js") :
+	 new Worker(window.location.href + "worker.js");
 WORKER.onmessage = function(e) {
 	console.log("ON WORKER RESPONSE");
+}
+function start_worker_timer(duration) {
+	const timestamp = window.performance.now();
+	WORKER.postMessage({timestamp: timestamp, duration: duration})
 }
 
 const original_title = document.title;
@@ -65,7 +71,7 @@ function start_timer(millis) {
 }
 
 function set_alarm_timer() {
-	WORKER.postMessage(10 * 1000);
+	start_worker_timer(10 * 1000);
 	
 	clearTimeout(alarm_timeout);
 	alarm_timeout = setInterval(on_alarm, ALARM_TIMEOUT);
